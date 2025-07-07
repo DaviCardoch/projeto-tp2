@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Buscar Produto{% endblock %}
+{% block content %}
+<h2>Buscar Produto</h2>
+<form method="post">
+  <label>Produto:</label>
+  <input
+    type="text"
+    name="name"
+    id="product-input"
+    list="product-suggestions"
+    autocomplete="off"
+    required
+  />
+  <datalist id="product-suggestions"></datalist>
+  <button type="submit">Buscar</button>
+</form>
+
+{% if results %}
+  <h3>Resultados:</h3>
+  <ul>
+    {% for pp in results %}
+      <li>{{ pp.establishment.name }} — R$ {{ "%.2f"|format(pp.price) }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<script>
+  const input = document.getElementById('product-input');
+  const list  = document.getElementById('product-suggestions');
+
+  input.addEventListener('input', () => {
+    const term = input.value.trim();
+    if (term.length < 2) return;
+
+    fetch(`/autocomplete?q=${encodeURIComponent(term)}`)
+      .then(r => r.json())
+      .then(names => {
+        list.innerHTML = '';
+        names.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          list.appendChild(opt);
+        });
+      });
+  });
+</script>
+{% endblock %}
