@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Compras{% endblock %}
+
+{% block content %}
+<h2>Lista de Compras</h2>
+
+<form method="post" onsubmit="syncHidden()">
+  <label>Produtos:</label>
+  <input
+    id="item-input"
+    type="text"
+    placeholder="Digite e selecione..."
+    list="products-list"
+    autocomplete="off"
+  />
+
+  <datalist id="products-list">
+    {% for p in all_products %}
+      <option value="{{ p.name }}">
+    {% endfor %}
+  </datalist>
+
+  <!-- Container para as tags -->
+  <div id="selected-items" class="tags-container"></div>
+
+  <!-- Campo oculto que envia o CSV de itens -->
+  <input type="hidden" name="items" id="items-hidden" />
+
+  <button type="submit">Calcular</button>
+</form>
+
+{% if establishments %}
+  <h3>Ranking de Estabelecimentos:</h3>
+  <ul>
+    {% for est, total in establishments %}
+      <li>{{ est.name }} — Total: R$ {{ "%.2f"|format(total) }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+
+<script>
+  const selected = [];
+  const input     = document.getElementById('item-input');
+  const container = document.getElementById('selected-items');
+  const hidden    = document.getElementById('items-hidden');
+
+  input.addEventListener('change', () => {
+    const val = input.value.trim();
+    if (!val || selected.includes(val)) return;
+    selected.push(val);
+    renderTags();
+    input.value = '';
+  });
+
+  function renderTags() {
+    container.innerHTML = '';
+    selected.forEach((item, idx) => {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = item;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '×';
+      btn.onclick = () => {
+        selected.splice(idx, 1);
+        renderTags();
+      };
+      tag.appendChild(btn);
+      container.appendChild(tag);
+    });
+  }
+
+  // Função chamada pelo onsubmit
+  function syncHidden() {
+    hidden.value = selected.join(',');
+  }
+</script>
+
+{% endblock %}
